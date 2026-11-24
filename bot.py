@@ -19,7 +19,7 @@ ADMIN_IDS = {1273001338}
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-ai_client = AsyncOpenAI(api_key=VSEGPT_API_KEY, base_url="https://vsegpt.ru")
+ai_client = AsyncOpenAI(api_key=VSEGPT_API_KEY, base_url="https://vsegpt.ru", timeout=60.0)
 
 conn = sqlite3.connect("taro_ksenia.db")
 cursor = conn.cursor()
