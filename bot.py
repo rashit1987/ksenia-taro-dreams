@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import random
 import sqlite3
 from datetime import datetime
 from aiogram import Bot, Dispatcher, F, types
@@ -79,15 +80,35 @@ def mark_free_used(user_id: int):
     cursor.execute("UPDATE users SET last_free_date = ? WHERE user_id = ?", (today, user_id))
     conn.commit()
 
+MAJOR_ARCANA = [
+    "Шут", "Маг", "Верховная Жрица", "Императрица", "Император", "Иерофант",
+    "Влюблённые", "Колесница", "Сила", "Отшельник", "Колесо Фортуны", "Справедливость",
+    "Повешенный", "Смерть", "Умеренность", "Дьявол", "Башня", "Звезда",
+    "Луна", "Солнце", "Страшный Суд", "Мир",
+]
+SUITS = ["Жезлов", "Кубков", "Мечей", "Пентаклей"]
+RANKS = ["Туз", "Двойка", "Тройка", "Четвёрка", "Пятёрка", "Шестёрка", "Семёрка", "Восьмёрка", "Девятка", "Десятка", "Паж", "Рыцарь", "Королева", "Король"]
+TAROT_DECK = MAJOR_ARCANA + [f"{rank} {suit}" for suit in SUITS for rank in RANKS]
+
+def draw_cards(count: int) -> str:
+    picked = random.sample(TAROT_DECK, count)
+    result = []
+    for card in picked:
+        pos = random.choice(["прямое положение", "перевёрнутое положение"])
+        result.append(f"{card} ({pos})")
+    return ", ".join(result)
+
 async def generate_taro_reading(spread_type: str, question: str) -> str:
     deck = get_today_deck()
+    count = 1 if "1 карта" in spread_type else 3
+    drawn_cards = draw_cards(count)
     system_prompt = (
         f"Ты — глубокий, бережный и мудрый таролог мастерской Ксюши. Сегодня ты работаешь на колоде: {deck}. "
-        "Вытяни карты, назови их и дай тёплую, понятную и точную трактовку. "
-        "Пиши живым русским языком с лёгкой мистической атмосферой, структурируй абзацами с эмодзи, без символов звёздочек (**). "
+        "Карты уже вытянуты из перемешанной колоды из 78 карт. Строго используй ТОЛЬКО те карты и их положения, которые указаны в запросе, не меняй их на другие. "
+        "Дай тёплую, понятную и точную трактовку. Пиши живым русским языком с лёгкой мистической атмосферой, структурируй абзацами с эмодзи, без символов звёздочек (**). "
         "Уложись в 1800 символов, чтобы текст легко читался одним сообщением."
     )
-    user_msg = f"Тип расклада: {spread_type}.\nЗапрос человека: {question}"
+    user_msg = f"Тип расклада: {spread_type}.\nВыпавшие карты: {drawn_cards}.\nЗапрос человека: {question}"
     resp = await ai_client.chat.completions.create(
         model="deepseek/deepseek-v4.1-flash-1017-alt-lowcost",
         messages=[
