@@ -48,7 +48,7 @@ def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🔮 Карта дня"), KeyboardButton(text="🃏 Расклад на 3 карты")],
-            [KeyboardButton(text="❓ Задать свой вопрос картам")],
+            [KeyboardButton(text="❓ Свой вопрос картам"), KeyboardButton(text="⚔️ Бизнес: Система Кшатриев")],
             [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской Ксюши")],
         ],
         resize_keyboard=True,
