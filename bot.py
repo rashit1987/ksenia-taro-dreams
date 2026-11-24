@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 VSEGPT_API_KEY = os.getenv("VSEGPT_API_KEY", "").strip()
 
-ADMIN_IDS = {1273001338}
+ADMIN_IDS = {1795533772, 1273001338}
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
