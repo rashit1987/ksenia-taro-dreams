@@ -48,8 +48,8 @@ def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🔮 Карта дня"), KeyboardButton(text="🃏 Расклад на 3 карты")],
-            [KeyboardButton(text="❓ Свой вопрос картам"), KeyboardButton(text="⚔️ Бизнес: Система Кшатриев")],
-            [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской Ксюши")],
+            [KeyboardButton(text="❓ Свой вопрос картам"), KeyboardButton(text="⚔️ Бизнес-расклад (Кшатрии)")],
+            [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской")],
         ],
         resize_keyboard=True,
     )
@@ -102,8 +102,8 @@ async def generate_taro_reading(spread_type: str, question: str) -> str:
     deck = get_today_deck()
     count = 1 if "1 карта" in spread_type else 3
     drawn_cards = draw_cards(count)
-    system_prompt = (
-        f"Ты — глубокий, бережный и мудрый таролог мастерской Ксюши. Сегодня ты работаешь на колоде: {deck}. "
+        system_prompt = (
+        f"Ты — глубокий, бережный и мудрый таролог. Сегодня ты работаешь на колоде: {deck}. "
         "Карты уже вытянуты из перемешанной колоды из 78 карт. Строго используй ТОЛЬКО те карты и их положения, которые указаны в запросе, не меняй их на другие. "
         "Дай тёплую, понятную и точную трактовку. Пиши живым русским языком с лёгкой мистической атмосферой, структурируй абзацами с эмодзи, без символов звёздочек (**). "
         "Уложись в 1800 символов, чтобы текст легко читался одним сообщением."
@@ -129,7 +129,7 @@ async def cmd_start(message: types.Message):
     conn.commit()
     deck = get_today_deck()
     await message.answer(
-        "✨ Добро пожаловать в Мастерскую Таро и Ловцов Снов Ксюши!\n\n"
+        "✨ Добро пожаловать в Мастерскую Таро и Ловцов Снов!\n\n"
         f"🃏 Колода дня сегодня:\n{deck}\n\n"
         "Здесь можно вытянуть карту дня, сделать расклад на любую ситуацию или выбрать ловец снов ручной работы, сплетённый на живых ветках.\n\n"
         "Выбирай действие в меню ниже 👇",
@@ -181,10 +181,26 @@ async def process_taro_question(message: types.Message, state: FSMContext):
     except Exception as e:
         await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
 
+@dp.message(F.text == "⚔️ Бизнес-расклад (Кшатрии)")
+async def kshatriya_business_spread(message: types.Message):
+    if not can_use_free(message.from_user.id):
+        await message.answer("🌙 Бесплатный расклад на сегодня уже использован. Новая попытка откроется завтра!")
+        return
+    wait_msg = await message.answer("⚔️ Выкладываю 4 карты по системе Кшатриев: Лидер — Поле боя — Ресурс — Стратегический ход...")
+    try:
+        reading = await generate_taro_reading(
+            "Бизнес-расклад по системе Кшатриев (4 позиции: 1. Лидер и управленческая сила; 2. Внешнее поле и конкуренты; 3. Ресурсы, команда и инструменты; 4. Главный стратегический ход для победы)",
+            "Проведи диагностику моего дела и стратегии роста по касте Кшатриев: где моя сила, где уязвимость и как действовать как лидер.",
+        )
+        mark_free_used(message.from_user.id)
+        await wait_msg.edit_text(reading)
+    except Exception as e:
+        await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
+
 @dp.message(F.text == "🕸 Витрина ловцов снов")
 async def show_dreamcatchers(message: types.Message):
     await message.answer(
-        "🕸 ЛОВЦЫ СНОВ РУЧНОЙ РАБОТЫ ОТ КСЮШИ\n\n"
+        "🕸 ЛОВЦЫ СНОВ РУЧНОЙ РАБОТЫ\n\n"
         "Каждый ловец плетётся вручную с нуля на натуральных лесных ветках, с подбором перьев, камней и нитей под задачу хозяина.\n\n"
         "Выбери подходящий формат, чтобы узнать детали:",
         reply_markup=dreamcatchers_keyboard(),
@@ -218,13 +234,13 @@ async def dreamcatcher_details(callback: types.CallbackQuery):
         "dc_custom": (
             "✨ ИНДИВИДУАЛЬНЫЙ ЗАКАЗ ПОД ВАШ ЗАПРОС\n\n"
             "• Плетётся лично под человека, событие или конкретное намерение (спокойный сон, защита дома, подарок близкому).\n"
-            "• Вместе с Ксюшей подбираете размер, форму ветки, цветовую гамму и камни.\n\n"
-            "Написать Ксюше для обсуждения идеи: @kata_nakata"
+            "• Вместе с мастером подбираете размер, форму ветки, цветовую гамму и камни.\n\n"
+            "Написать мастеру для обсуждения идеи: @kata_nakata"
         ),
     }
     await callback.message.answer(items.get(callback.data, "Напиши мастеру: @kata_nakata"))
 
-@dp.message(F.text == "✨ О мастерской Ксюши")
+@dp.message(F.text == "✨ О мастерской")
 async def about_workshop(message: types.Message):
     await message.answer(
         "✨ О МАСТЕРСКОЙ\n\n"
@@ -233,6 +249,7 @@ async def about_workshop(message: types.Message):
         "• Время работы мастерской: ежедневно с 12:00 до 18:00.\n\n"
         "По любым вопросам и заказам: @kata_nakata"
     )
+
 
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
