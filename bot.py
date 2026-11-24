@@ -100,7 +100,7 @@ def draw_cards(count: int) -> str:
 
 async def generate_taro_reading(spread_type: str, question: str) -> str:
     deck = get_today_deck()
-    count = 1 if "1 карта" in spread_type else 3
+    count = 1 if "1 карта" in spread_type else (4 if "Бизнес-расклад" in spread_type else 3)
     drawn_cards = draw_cards(count)
     system_prompt = (
         f"Ты — глубокий, бережный и мудрый таролог. Сегодня ты работаешь на колоде: {deck}. "
