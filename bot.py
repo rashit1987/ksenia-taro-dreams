@@ -48,7 +48,7 @@ def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🔮 Карта дня"), KeyboardButton(text="🃏 Расклад на 3 карты")],
-            [KeyboardButton(text="❓ Свой вопрос картам"), KeyboardButton(text="⚔️ Бизнес-расклад")],
+            [KeyboardButton(text="❓ Задать свой вопрос картам"), KeyboardButton(text="⚔️ Бизнес-расклад")],
             [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской")],
         ],
         resize_keyboard=True,
@@ -182,16 +182,16 @@ async def process_taro_question(message: types.Message, state: FSMContext):
     except Exception as e:
         await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
 
-@dp.message(F.text == "⚔️ Бизнес-расклад (Кшатрии)")
+@dp.message(F.text == "⚔️ Бизнес-расклад")
 async def kshatriya_business_spread(message: types.Message):
     if not can_use_free(message.from_user.id):
         await message.answer("🌙 Бесплатный расклад на сегодня уже использован. Новая попытка откроется завтра!")
         return
-    wait_msg = await message.answer("⚔️ Выкладываю 4 карты по системе Кшатриев: Лидер — Поле боя — Ресурс — Стратегический ход...")
+    wait_msg = await message.answer("⚔️ Выкладываю 4 карты для диагностики дела: Лидер — Поле — Ресурс — Стратегический ход...")
     try:
         reading = await generate_taro_reading(
-            "Бизнес-расклад по системе Кшатриев (4 позиции: 1. Лидер и управленческая сила; 2. Внешнее поле и конкуренты; 3. Ресурсы, команда и инструменты; 4. Главный стратегический ход для победы)",
-            "Проведи диагностику моего дела и стратегии роста по касте Кшатриев: где моя сила, где уязвимость и как действовать как лидер.",
+            "Бизнес-расклад (4 позиции: 1. Лидер и управленческая сила; 2. Внешнее поле и конкуренты; 3. Ресурсы, команда и инструменты; 4. Главный стратегический ход для роста)",
+            "Проведи диагностику моего дела и стратегии роста: где моя сила, где уязвимость и какой шаг даст лучший результат.",
         )
         mark_free_used(message.from_user.id)
         await wait_msg.edit_text(reading)
