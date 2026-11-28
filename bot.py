@@ -74,14 +74,19 @@ class TaroForm(StatesGroup):
 def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🌅 Важное для меня сегодня"), KeyboardButton(text="✨ Голос внутреннего «Я»")],
-            [KeyboardButton(text="💑 Расклад «Он и Она»"), KeyboardButton(text="🧭 Как поступить / не поступать")],
-            [KeyboardButton(text="💼 Работа и карьера"), KeyboardButton(text="⚔️ Бизнес-расклад")],
-            [KeyboardButton(text="❓ Задать свой вопрос картам"), KeyboardButton(text="💳 Баланс и пополнение")],
-            [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской")],
+            [KeyboardButton(text="🎁 Важное для меня сегодня (Бесплатно)")],
+            [KeyboardButton(text="✨ Голос внутреннего «Я»"), KeyboardButton(text="💑 Расклад «Он и Она»")],
+            [KeyboardButton(text="🧭 Как поступить / не поступать"), KeyboardButton(text="💼 Работа и карьера")],
+            [KeyboardButton(text="⚔️ Бизнес-расклад"), KeyboardButton(text="❓ Свой вопрос картам")],
+            [
+                KeyboardButton(text="💳 Баланс"),
+                KeyboardButton(text="🕸 Ловцы снов"),
+                KeyboardButton(text="✨ Мастерская"),
+            ],
         ],
         resize_keyboard=True,
     )
+
 def buy_taro_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -212,7 +217,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     )
 
 
-@dp.message(F.text == "💳 Баланс и пополнение")
+@dp.message(F.text == "💳 Баланс")
 async def show_balance(message: types.Message):
     bal = "Безлимит (Админ)" if message.from_user.id in ADMIN_IDS else f"{get_paid_readings(message.from_user.id)} шт."
     await message.answer(stars_help_text(bal), reply_markup=buy_taro_keyboard())
@@ -252,7 +257,7 @@ async def successful_payment(message: types.Message):
         f"✨ Оплата прошла успешно! Начислено раскладов: +{added}.\nТекущий баланс: {get_paid_readings(message.from_user.id)} шт.",
         reply_markup=main_keyboard(),
     )
-@dp.message(F.text == "🌅 Важное для меня сегодня")
+@dp.message(F.text == "🎁 Важное для меня сегодня (Бесплатно)")
 async def today_important_card(message: types.Message):
     if not can_use_daily_free(message.from_user.id):
         await message.answer(
@@ -374,7 +379,7 @@ async def process_work_spread(message: types.Message, state: FSMContext):
         await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
 
 
-@dp.message(F.text == "❓ Задать свой вопрос картам")
+@dp.message(F.text == "❓ Свой вопрос картам")
 async def ask_taro(message: types.Message, state: FSMContext):
     if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
         await message.answer("🌙 На балансе 0 глубоких раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
@@ -416,7 +421,7 @@ async def kshatriya_business_spread(message: types.Message):
         await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
 
 
-@dp.message(F.text == "🕸 Витрина ловцов снов")
+@dp.message(F.text == "🕸 Ловцы снов")
 async def show_dreamcatchers(message: types.Message):
     await message.answer(
         "🕸 ЛОВЦЫ СНОВ РУЧНОЙ РАБОТЫ\n\n"
@@ -438,7 +443,7 @@ async def dreamcatcher_details(callback: types.CallbackQuery):
     await callback.message.answer(items.get(callback.data, "Напиши мастеру: @kata_nakata"))
 
 
-@dp.message(F.text == "✨ О мастерской")
+@dp.message(F.text == "✨ Мастерская")
 async def about_workshop(message: types.Message):
     await message.answer(
         "✨ О МАСТЕРСКОЙ\n\n"
