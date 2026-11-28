@@ -23,7 +23,10 @@ logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 VSEGPT_API_KEY = os.getenv("VSEGPT_API_KEY", "").strip()
-DREAMCATCHERS_CHANNEL_URL = os.getenv("DREAMCATCHERS_CHANNEL_URL", "https://t.me").strip()
+DREAMCATCHERS_CHANNEL_URL = os.getenv(
+    "DREAMCATCHERS_CHANNEL_URL",
+    "https://t.me" + "kata_nakata",
+).strip()
 
 ADMIN_IDS = {1795533772, 1273001338, 610828745}
 
@@ -82,11 +85,16 @@ def buy_taro_keyboard():
             [InlineKeyboardButton(text="✨ Пакет 3 расклада — 250 ⭐", callback_data="tbuy_3")],
             [InlineKeyboardButton(text="🌟 Пакет 10 раскладов — 700 ⭐", callback_data="tbuy_10")],
             [
-                InlineKeyboardButton(text="🟣 Купить ⭐ (Kupikod)", url="https://kupikod.com"),
-                InlineKeyboardButton(text="🔴 Купить ⭐ (МТС Оплата)", url="https://mts.ru"),
+                InlineKeyboardButton(
+                    text="🟣 Купить ⭐ (Kupikod)",
+                    url="https://kupikod.com" + "/console/telegram",
+                ),
+                InlineKeyboardButton(
+                    text="🔴 Купить ⭐ (МТС Оплата)",
+                    url="https://" + "payment." + "mts.ru/tools/telegram-stars",
+                ),
             ],
-        ]
-    )
+
 
 
 def dreamcatchers_keyboard():
@@ -324,3 +332,15 @@ async def about_workshop(message: types.Message):
         "✨ О МАСТЕРСКОЙ\n\n"
         "• Таро: авторские расклады с опорой на многолетнюю практику и живые тетради трактовок.\n"
         "• Ловцы снов: 100% ручная работа — от поиска и сушки лесных веток до последнего пёрышка.\n"
+        "• Время работы мастерской: ежедневно с 12:00 до 18:00.\n\n"
+        "По любым вопросам и заказам: @kata_nakata"
+    )
+
+
+async def main():
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
