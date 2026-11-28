@@ -67,12 +67,14 @@ def get_today_deck() -> str:
 class TaroForm(StatesGroup):
     waiting_question = State()
     waiting_love_question = State()
+    waiting_action_question = State()
 
 
 def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="💑 Расклад «Он и Она»"), KeyboardButton(text="❓ Задать свой вопрос картам")],
+            [KeyboardButton(text="💑 Расклад «Он и Она»"), KeyboardButton(text="🧭 Как поступить / не поступать")],
+            [KeyboardButton(text="🕯 Важное для меня сейчас"), KeyboardButton(text="❓ Задать свой вопрос картам")],
             [KeyboardButton(text="⚔️ Бизнес-расклад"), KeyboardButton(text="💳 Баланс и пополнение")],
             [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской")],
         ],
@@ -205,7 +207,7 @@ async def process_taro_buy(callback: types.CallbackQuery):
     await callback.answer()
     pack = callback.data.replace("tbuy_", "")
     tariffs = {
-        "1": ("1 глубокий расклад Таро", "Расклад «Он и Она», личный вопрос или бизнес-расклад", 100, "taro_pack_1"),
+        "1": ("1 глубокий расклад Таро", "Любой расклад: «Он и Она», «Как поступить», самопомощь или бизнес", 100, "taro_pack_1"),
         "3": ("Пакет «3 расклада Таро»", "3 глубоких расклада на любую тему с трактовкой", 250, "taro_pack_3"),
         "10": ("Пакет «10 раскладов Таро»", "10 глубоких раскладов на любую тему с трактовкой", 700, "taro_pack_10"),
     }
@@ -257,6 +259,49 @@ async def process_love_spread(message: types.Message, state: FSMContext):
             "Расклад на отношения «Он и Она» (4 позиции: 1. Его мысли, чувства и намерения; 2. Её мысли, чувства и намерения; 3. Энергия и суть происходящего между ними сейчас; 4. Перспектива развития и мудрый совет)",
             message.text,
             card_count=4,
+        )
+        spend_reading(message.from_user.id)
+        await wait_msg.edit_text(reading)
+    except Exception as e:
+@dp.message(F.text == "🧭 Как поступить / не поступать")
+async def ask_action_spread(message: types.Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
+        await message.answer("🌙 На балансе 0 раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
+        return
+    await message.answer("🧭 Опиши кратко ситуацию или выбор, перед которым ты сейчас стоишь — карты подскажут, как действовать, а чего лучше избежать:")
+    await state.set_state(TaroForm.waiting_action_question)
+
+
+@dp.message(TaroForm.waiting_action_question)
+async def process_action_spread(message: types.Message, state: FSMContext):
+    await state.clear()
+    if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
+        await message.answer("🌙 На балансе 0 раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
+        return
+    wait_msg = await message.answer("🕯 Выкладываю 3 карты: Ситуация — Как поступить — Чего точно не делать...")
+    try:
+        reading = await generate_taro_reading(
+            "Расклад-навигатор «Как поступить / не поступать» (3 позиции: 1. Истинная суть ситуации сейчас; 2. Как стоит поступить — верный шаг; 3. Чего точно делать не стоит — главная ошибка)",
+            message.text,
+            card_count=3,
+        )
+        spend_reading(message.from_user.id)
+        await wait_msg.edit_text(reading)
+    except Exception as e:
+        await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
+
+
+@dp.message(F.text == "🕯 Важное для меня сейчас")
+async def self_help_spread(message: types.Message):
+    if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
+        await message.answer("🌙 На балансе 0 раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
+        return
+    wait_msg = await message.answer("🕯 Настраиваюсь на твоё состояние и тяну 3 карты самопомощи...")
+    try:
+        reading = await generate_taro_reading(
+            "Расклад самопомощи «Важное для меня сейчас» (3 позиции: 1. Что сейчас самое главное в твоём внутреннем состоянии; 2. Где спрятан твой ресурс и опора прямо сейчас; 3. Бережный шаг самопомощи, чтобы поддержать себя)",
+            "Что мне сейчас важнее всего увидеть, понять и сделать для внутренней опоры и бережной самопомощи?",
+            card_count=3,
         )
         spend_reading(message.from_user.id)
         await wait_msg.edit_text(reading)
