@@ -263,6 +263,8 @@ async def process_love_spread(message: types.Message, state: FSMContext):
         spend_reading(message.from_user.id)
         await wait_msg.edit_text(reading)
     except Exception as e:
+        await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
+
 @dp.message(F.text == "🧭 Как поступить / не поступать")
 async def ask_action_spread(message: types.Message, state: FSMContext):
     if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
