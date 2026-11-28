@@ -68,18 +68,21 @@ class TaroForm(StatesGroup):
     waiting_question = State()
     waiting_love_question = State()
     waiting_action_question = State()
+    waiting_work_question = State()
 
 
 def main_keyboard():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="💑 Расклад «Он и Она»"), KeyboardButton(text="🧭 Как поступить / не поступать")],
-            [KeyboardButton(text="🕯 Важное для меня сейчас"), KeyboardButton(text="❓ Задать свой вопрос картам")],
-            [KeyboardButton(text="⚔️ Бизнес-расклад"), KeyboardButton(text="💳 Баланс и пополнение")],
-            [KeyboardButton(text="🕸 Витрина ловцов снов"), KeyboardButton(text="✨ О мастерской")],
+            [KeyboardButton(text="🕯 Важное для меня сейчас"), KeyboardButton(text="💼 Работа и карьера")],
+            [KeyboardButton(text="⚔️ Бизнес-расклад"), KeyboardButton(text="❓ Задать свой вопрос картам")],
+            [KeyboardButton(text="💳 Баланс и пополнение"), KeyboardButton(text="🕸 Витрина ловцов снов")],
+            [KeyboardButton(text="✨ О мастерской")],
         ],
         resize_keyboard=True,
     )
+
 def buy_taro_keyboard():
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -304,6 +307,34 @@ async def self_help_spread(message: types.Message):
             "Расклад самопомощи «Важное для меня сейчас» (3 позиции: 1. Что сейчас самое главное в твоём внутреннем состоянии; 2. Где спрятан твой ресурс и опора прямо сейчас; 3. Бережный шаг самопомощи, чтобы поддержать себя)",
             "Что мне сейчас важнее всего увидеть, понять и сделать для внутренней опоры и бережной самопомощи?",
             card_count=3,
+        )
+        spend_reading(message.from_user.id)
+        await wait_msg.edit_text(reading)
+    except Exception as e:
+        await wait_msg.edit_text(f"Не удалось связаться с потоком: {e}")
+@dp.message(F.text == "💼 Работа и карьера")
+async def ask_work_spread(message: types.Message, state: FSMContext):
+    if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
+        await message.answer("🌙 На балансе 0 раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
+        return
+    await message.answer(
+        "💼 Напиши кратко свой вопрос или ситуацию по работе (например: перспективы роста, отношения с руководством и коллегами, стабильность позиции или смена работы):"
+    )
+    await state.set_state(TaroForm.waiting_work_question)
+
+
+@dp.message(TaroForm.waiting_work_question)
+async def process_work_spread(message: types.Message, state: FSMContext):
+    await state.clear()
+    if message.from_user.id not in ADMIN_IDS and get_paid_readings(message.from_user.id) <= 0:
+        await message.answer("🌙 На балансе 0 раскладов. Выбери пакет ниже 👇", reply_markup=buy_taro_keyboard())
+        return
+    wait_msg = await message.answer("🕯 Выкладываю 4 карты по работе: Текущая позиция — Руководство и коллеги — Перспективы и риски — Верный шаг...")
+    try:
+        reading = await generate_taro_reading(
+            "Расклад «Работа и карьера» (4 позиции: 1. Текущая позиция, устойчивость и реальный риск увольнения/сокращения; 2. Атмосфера в коллективе и отношение руководства; 3. Перспективы профессионального и финансового роста; 4. Главный практический шаг для укрепления позиций)",
+            message.text,
+            card_count=4,
         )
         spend_reading(message.from_user.id)
         await wait_msg.edit_text(reading)
