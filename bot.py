@@ -25,7 +25,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 VSEGPT_API_KEY = os.getenv("VSEGPT_API_KEY", "").strip()
 DREAMCATCHERS_CHANNEL_URL = os.getenv(
     "DREAMCATCHERS_CHANNEL_URL",
-    "https://t.me" + "kata_nakata",
+    "https://t.me/" + "kata_nakata",
 ).strip()
 
 ADMIN_IDS = {1795533772, 1273001338, 610828745}
